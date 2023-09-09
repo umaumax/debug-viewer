@@ -1,16 +1,26 @@
 #!/usr/bin/env python3
-import asyncio
 import json
-import websockets
 import time
 import math
 import quaternion
 import numpy as np
 import argparse
-from flask import Flask, request, jsonify
+
 import redis
 
-app = Flask(__name__)
+import asyncio
+import uvicorn
+from fastapi import FastAPI, WebSocket
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import RedirectResponse
+
+app = FastAPI()
+app.mount("/static", StaticFiles(directory="static", html=True), name="static")
+
+
+@app.get("/", response_class=RedirectResponse)
+async def redirect_to_index():
+    return "/static/index.html"
 
 r = redis.Redis(host='localhost', port=6379, decode_responses=True)
 
@@ -63,64 +73,51 @@ def generate_dummy_data():
         yield data
 
 
-async def websocket_handler(websocket, path):
-    print(f'path: {path}')
-    if path == '/dummy':
-        await dummy_data_sender(websocket, path)
-    elif path == '/redis':
-        await redis_data_sender(websocket, path)
-    else:
-        await dummy_data_sender(websocket, path)
-
-
-async def dummy_data_sender(websocket, path):
+@app.websocket("/dummy")
+async def websocket_dummy_redis(websocket: WebSocket):
+    await websocket.accept()
     dummy_data_generator = generate_dummy_data()
-    try:
-        while True:
-            data = next(dummy_data_generator)
-            await websocket.send(json.dumps(data))
-            await asyncio.sleep(0.3)
-
-    except websockets.exceptions.ConnectionClosed:
-        print("connection closed")
+    while True:
+        data = next(dummy_data_generator)
+        response_data = json.dumps(data)
+        await websocket.send_text(data)
+        await asyncio.sleep(0.3)
 
 
-async def redis_data_sender(websocket, path):
+@app.websocket("/redis")
+async def websocket_redis(websocket: WebSocket):
+    print("/redis")
+    await websocket.accept()
     dummy_data_generator = generate_dummy_data()
     last_id = '0'
     sleep_ms = 100  # if 0, xread() is blocked until getting data
-    try:
-        while True:
-            # NOTE: 自動生成だが、サーバを起動するたびに最初からのデータとなるので、ループしていることに注意
-            data = next(dummy_data_generator)
-            stream_key = data['group']
-            r.xadd(stream_key, data)
+    while True:
+        # NOTE: 自動生成だが、サーバを起動するたびに最初からのデータとなるので、ループしていることに注意
+        data = next(dummy_data_generator)
+        stream_key = data['group']
+        r.xadd(stream_key, data)
 
-            await asyncio.sleep(0.3)
+        time.sleep(0.3)
 
-            try:
-                result = r.xread({stream_key: last_id},
-                                 count=10, block=sleep_ms)
-                if len(result) == 0:
-                    continue
-                # only for 1st stream
-                key, messages = result[0]
-                last_id = messages[-1][0]
-                for id, data in messages:
-                    field_values = [data.get(field.encode('ascii'), None).decode('ascii')
-                                    for field in field_names]
-                    field_values = [data.get(field, None)
-                                    for field in field_names]
-                    response_data = json.dumps(
-                        dict(zip(field_names, field_values)))
-                    # print(response_data)
-                    await websocket.send(response_data)
-            except ConnectionError as e:
-                print("ERROR REDIS CONNECTION: {}".format(e))
-                break
-
-    except websockets.exceptions.ConnectionClosed:
-        print("connection closed")
+        try:
+            result = r.xread({stream_key: last_id},
+                             count=10, block=sleep_ms)
+            if len(result) == 0:
+                continue
+            # only for 1st stream
+            key, messages = result[0]
+            last_id = messages[-1][0]
+            for id, data in messages:
+                field_values = [data.get(field, None)
+                                for field in field_names]
+                response_data = json.dumps(
+                    dict(zip(field_names, field_values)))
+                # print(response_data)
+                await websocket.send_text(response_data)
+                await asyncio.sleep(0.3)
+        except ConnectionError as e:
+            print("ERROR REDIS CONNECTION: {}".format(e))
+            break
 
 
 def main():
@@ -133,10 +130,7 @@ def main():
     args, extra_args = parser.parse_known_args()
     print(vars(args))
 
-    start_server = websockets.serve(websocket_handler, "0.0.0.0", args.port)
-
-    asyncio.get_event_loop().run_until_complete(start_server)
-    asyncio.get_event_loop().run_forever()
+    uvicorn.run(app, host="0.0.0.0", port=args.port)
 
 
 if __name__ == '__main__':
