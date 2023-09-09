@@ -9,38 +9,45 @@ import numpy as np
 import argparse
 
 
-async def dummy_data_sender(websocket, path):
+def generate_dummy_data():
     sequential_id = 1
     group = "session-123"
     angular_velocity = np.array([0.1, 0.2, 0.3])
     dt = 0.1
     q = quaternion.from_euler_angles([0, 0, 0])
     label = "ARKit tracking pose"
+    while True:
+        timestamp = int(time.time())
+        sequential_id += 1
+
+        x = (sequential_id - 30) * 0.1
+        y = math.sin(x)
+        z = math.cos(3 * x)
+        rotation_increment = quaternion.from_euler_angles(
+            angular_velocity * dt)
+        q *= rotation_increment
+        data = {
+            "timestamp": timestamp,
+            "group": group,
+            "sequential_id": sequential_id,
+            "label": label,
+            "position.x": x,
+            "position.y": y,
+            "position.z": z,
+            "rotation.x": q.x,
+            "rotation.y": q.y,
+            "rotation.z": q.z,
+            "rotation.w": q.w,
+        }
+
+        yield data
+
+
+async def dummy_data_sender(websocket, path):
+    dummy_data_generator = generate_dummy_data()
     try:
         while True:
-            timestamp = int(time.time())
-            sequential_id += 1
-
-            x = (sequential_id - 30) * 0.1
-            y = math.sin(x)
-            z = math.cos(3 * x)
-            rotation_increment = quaternion.from_euler_angles(
-                angular_velocity * dt)
-            q *= rotation_increment
-            data = {
-                "timestamp": timestamp,
-                "group": group,
-                "sequential_id": sequential_id,
-                "label": label,
-                "position.x": x,
-                "position.y": y,
-                "position.z": z,
-                "rotation.x": q.x,
-                "rotation.y": q.y,
-                "rotation.z": q.z,
-                "rotation.w": q.w,
-            }
-
+            data = next(dummy_data_generator)
             await websocket.send(json.dumps(data))
             await asyncio.sleep(0.3)
 
