@@ -1,0 +1,41 @@
+body {
+    margin: 0;
+}
+
+.flex-container-raw {
+    display: flex;
+    flex-direction: row;
+}
+
+.left-pane {
+    flex: 3;
+    background-color: #e0e000;
+    align-items: center;
+    padding: 10px;
+    margin: 10px
+}
+
+#canvas {
+    max-width: 100%;
+    max-height: 100%;
+}
+
+.right-pane {
+    flex: 1;
+    background-color: #00d0d0;
+    padding: 10px;
+    margin: 10px
+}
+
+.flex-container-column {
+    display: flex;
+    flex-direction: column;
+}
+
+.top-pane {}
+
+.bottom-pane {
+    background-color: #ff943e;
+    padding: 10px;
+    margin: 10px
+}
