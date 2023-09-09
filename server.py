@@ -21,7 +21,7 @@ async def dummy_data_sender(websocket, path):
             timestamp = int(time.time())
             sequential_id += 1
 
-            x = (sequential_id - 50) * 0.1
+            x = (sequential_id - 30) * 0.1
             y = math.sin(x)
             z = math.cos(3 * x)
             rotation_increment = quaternion.from_euler_angles(

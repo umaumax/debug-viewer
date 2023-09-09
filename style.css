@@ -2,11 +2,6 @@ body {
     margin: 0;
 }
 
-.flex-container-raw {
-    display: flex;
-    flex-direction: row;
-}
-
 .left-pane {
     flex: 3;
     background-color: #e0e000;
@@ -20,16 +15,15 @@ body {
     max-height: 100%;
 }
 
+#canvas-container {
+    max-width: 100%;
+    max-height: 100%;
+}
+
 .right-pane {
-    flex: 1;
     background-color: #00d0d0;
     padding: 10px;
     margin: 10px
-}
-
-.flex-container-column {
-    display: flex;
-    flex-direction: column;
 }
 
 .top-pane {}
