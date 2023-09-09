@@ -1,15 +1,33 @@
 const scene = new THREE.Scene();
 
-const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+const fov = 75.0
+const camera = new THREE.PerspectiveCamera(fov, window.innerWidth / window.innerHeight, 0.1, 1000);
 camera.position.y = 1.5;
 camera.position.x = -1.0;
 camera.position.z = 3;
 
 camera.lookAt(scene.position);
 
-const renderer = new THREE.WebGLRenderer();
-renderer.setSize(window.innerWidth, window.innerHeight);
-document.body.appendChild(renderer.domElement);
+const canvas = document.getElementById('canvas')
+const canvas_container = document.getElementById('canvas-container')
+const renderer = new THREE.WebGLRenderer({
+    canvas: canvas
+});
+
+function update_canvas() {
+    const ratio = 16.0 / 9.0
+    var canvasWidth = canvas_container.offsetWidth;
+    var canvasHeight = canvasWidth / ratio;
+    camera.aspect = canvasWidth / canvasHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(canvasWidth, canvasHeight);
+}
+update_canvas()
+canvas_container.appendChild(renderer.domElement);
+
+window.addEventListener('resize', () => {
+    update_canvas()
+});
 
 // // ジオメトリとマテリアルの作成
 // const geometry = new THREE.BoxGeometry();
