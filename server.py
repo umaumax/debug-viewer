@@ -42,7 +42,7 @@ async def dummy_data_sender(websocket, path):
             }
 
             await websocket.send(json.dumps(data))
-            await asyncio.sleep(0.1)
+            await asyncio.sleep(0.3)
 
     except websockets.exceptions.ConnectionClosed:
         print("connection closed")
