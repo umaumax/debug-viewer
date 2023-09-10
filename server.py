@@ -5,6 +5,8 @@ import math
 import quaternion
 import numpy as np
 import argparse
+import logging
+import coloredlogs
 
 import redis
 
@@ -17,7 +19,10 @@ from fastapi.responses import RedirectResponse
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static", html=True), name="static")
 
-redis_connection = None  # for redis
+redis_connection = None
+
+logger = logging.getLogger("debug-viewer")
+coloredlogs.install()
 
 
 def get_redis_connection():
@@ -28,20 +33,6 @@ def get_redis_connection():
 @app.get("/", response_class=RedirectResponse)
 async def redirect_to_index():
     return "/static/index.html"
-
-field_names = [
-    "timestamp",
-    "group",
-    "sequential_id",
-    "label",
-    "position.x",
-    "position.y",
-    "position.z",
-    "rotation.x",
-    "rotation.y",
-    "rotation.z",
-    "rotation.w"
-]
 
 
 def generate_dummy_data():
@@ -117,11 +108,8 @@ async def websocket_redis(websocket: WebSocket):
             key, messages = result[0]
             last_id = messages[-1][0]
             for id, data in messages:
-                field_values = [data.get(field, None)
-                                for field in field_names]
-                response_data = json.dumps(
-                    dict(zip(field_names, field_values)))
-                # print(response_data)
+                response_data = json.dumps(data)
+                logger.debug(f"/ws/get/database: {response_data}")
                 await websocket.send_text(response_data)
                 await asyncio.sleep(0.3)
         except Exception as e:
@@ -136,6 +124,7 @@ async def websocket_redis(websocket: WebSocket):
     while True:
         try:
             request_data = await websocket.receive_text()
+            logger.debug(f"/ws/set/database: {request_data}")
             json_data = json.loads(request_data)
             if not isinstance(json_data, list):
                 json_data = [json_data]
@@ -162,7 +151,12 @@ def main():
     parser.add_argument('args', nargs='*')
 
     args, extra_args = parser.parse_known_args()
-    print(vars(args))
+
+    logger.setLevel(logging.INFO)
+    if args.verbose:
+        logger.setLevel(logging.DEBUG)
+
+    logger.info(vars(args))
 
     global redis_connection
     redis_connection = redis.Redis(
