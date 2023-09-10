@@ -418,6 +418,13 @@ const socket = new WebSocket(url);
 socket.addEventListener('open', (event) => {
     // socket.on('connection', (socket) => {
     console.log('connection opend');
+
+    const query_data = {
+        group: 'session-test',
+        timestamp: '12345'
+    };
+
+    socket.send(JSON.stringify(query_data));
 });
 
 socket.addEventListener('message', (event) => {

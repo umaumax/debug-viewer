@@ -1,13 +1,16 @@
 body {
     margin: 0;
+    background-color: #3E66F0;
+    font-family: "serif";
 }
 
 .left-pane {
     flex: 3;
-    background-color: #e0e000;
+    background-color: #0F40C5;
     align-items: center;
-    padding: 10px;
-    margin: 10px
+    color: #f3ffe8;
+    /* padding: 10px; */
+    margin: 8px
 }
 
 #canvas {
@@ -21,15 +24,21 @@ body {
 }
 
 .right-pane {
-    background-color: #00d0d0;
-    padding: 10px;
-    margin: 10px
+    background-color: #0F40C5;
+    color: #f3ffe8;
+    /* padding: 10px; */
+    margin: 8px
 }
 
-.top-pane {}
+.top-pane {
+    padding: 8px;
+    color: #f3ffe8;
+    /* margin: 10px */
+}
 
 .bottom-pane {
-    background-color: #ff943e;
-    padding: 10px;
-    margin: 10px
+    background-color: #0F40C5;
+    color: #f3ffe8;
+    padding: 8px;
+    margin: 4px
 }

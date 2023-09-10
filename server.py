@@ -5,16 +5,16 @@ import math
 import quaternion
 import numpy as np
 import argparse
+
 import logging
 import coloredlogs
 
-import redis
-
+import redis.asyncio as redis
 import asyncio
-
-from fastapi import FastAPI, WebSocket, HTTPException, Request
+from fastapi import FastAPI, WebSocket, HTTPException, Request, WebSocketDisconnect
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import RedirectResponse
+from starlette.websockets import WebSocketState
 
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static", html=True), name="static")
@@ -22,7 +22,6 @@ app.mount("/static", StaticFiles(directory="static", html=True), name="static")
 redis_connection = None
 
 logger = logging.getLogger("debug-viewer")
-coloredlogs.install()
 
 
 def get_redis_connection():
@@ -36,7 +35,7 @@ async def redirect_to_index():
 
 
 def generate_dummy_data():
-    sequential_id = 1
+    sequential_id = 0
     group = "session-123"
     angular_velocity = np.array([0.1, 0.2, 0.3])
     dt = 0.1
@@ -78,9 +77,9 @@ async def websocket_dummy_redis(websocket: WebSocket):
             data = next(dummy_data_generator)
             response_data = json.dumps(data)
             await websocket.send_text(response_data)
-            await asyncio.sleep(0.3)
+            await asyncio.sleep(0.1)
         except Exception as e:
-            print(f"WebSocket error: {e}")
+            logger.error(f"WebSocket error: {e}")
             break
     await websocket.close()
 
@@ -88,20 +87,33 @@ async def websocket_dummy_redis(websocket: WebSocket):
 @app.websocket("/ws/get/database")
 async def websocket_redis(websocket: WebSocket):
     await websocket.accept()
-    dummy_data_generator = generate_dummy_data()
+
+    stream_key = None
+    request_data = await websocket.receive_text()
+    try:
+        json_data = json.loads(request_data)
+        group = json_data.get("group")
+        timestamp = json_data.get("timestamp")
+        stream_key = group
+
+        logger.info(f"Received query: {json_data}")
+    except json.JSONDecodeError as e:
+        logger.warning(f"Invalid JSON data received. {e}")
+        await websocket.close()
+        return
+
+    # dummy_data_generator = generate_dummy_data()
     last_id = '0'
     sleep_ms = 100  # if 0, xread() is blocked until getting data
     while True:
-        # NOTE: 自動生成だが、サーバを起動するたびに最初からのデータとなるので、ループしていることに注意
-        data = next(dummy_data_generator)
-        stream_key = data['group']
-        get_redis_connection().xadd(stream_key, data)
-
-        time.sleep(0.3)
+        # data = next(dummy_data_generator)
+        # stream_key = data['group']
+        # get_redis_connection().xadd(stream_key, data)
+        # time.sleep(0.3)
 
         try:
-            result = get_redis_connection().xread({stream_key: last_id},
-                                                  count=10, block=sleep_ms)
+            result = await get_redis_connection().xread({stream_key: last_id},
+                                                        count=10, block=sleep_ms)
             if len(result) == 0:
                 continue
             # only for 1st stream
@@ -111,18 +123,22 @@ async def websocket_redis(websocket: WebSocket):
                 response_data = json.dumps(data)
                 logger.debug(f"/ws/get/database: {response_data}")
                 await websocket.send_text(response_data)
-                await asyncio.sleep(0.3)
+                await asyncio.sleep(0.1)
         except Exception as e:
-            print(f"WebSocket or Redis error: {e}")
+            logger.error(f"WebSocket or Redis error: {e}")
             break
     await websocket.close()
 
 
 @app.websocket("/ws/set/database")
 async def websocket_redis(websocket: WebSocket):
+    logger.debug(f"/ws/set/database:")
     await websocket.accept()
     while True:
         try:
+            # logger.debug(f"/ws/set/database: {websocket.application_state}")
+            if websocket.application_state == WebSocketState.DISCONNECTED:
+                break
             request_data = await websocket.receive_text()
             logger.debug(f"/ws/set/database: {request_data}")
             json_data = json.loads(request_data)
@@ -131,14 +147,18 @@ async def websocket_redis(websocket: WebSocket):
             response_data = []
             for object in json_data:
                 stream_key = object['group']
-                get_redis_connection().xadd(stream_key, object)
+                await get_redis_connection().xadd(stream_key, object)
                 response_data.append(
                     json.dumps({"stream_key": stream_key, "status": "OK"}))
+                websocket.accept
             await websocket.send_text(response_data)
-        except Exception as e:
-            print(f"WebSocket or Redis error: {e}")
+        except WebSocketDisconnect:
+            logger.info(f"Client disconnected.")
             break
-    await websocket.close()
+        except Exception as e:
+            logger.error(f"WebSocket or Redis error: {type(e).__name__} {e}")
+            await websocket.close()
+            break
 
 
 def main():
@@ -152,9 +172,10 @@ def main():
 
     args, extra_args = parser.parse_known_args()
 
-    logger.setLevel(logging.INFO)
+    log_level = logging.INFO
     if args.verbose:
-        logger.setLevel(logging.DEBUG)
+        log_level = logging.DEBUG
+    coloredlogs.install(level=log_level)
 
     logger.info(vars(args))
 
