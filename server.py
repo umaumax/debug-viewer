@@ -9,20 +9,25 @@ import argparse
 import redis
 
 import asyncio
-import uvicorn
-from fastapi import FastAPI, WebSocket
+
+from fastapi import FastAPI, WebSocket, HTTPException, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import RedirectResponse
 
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static", html=True), name="static")
 
+redis_connection = None  # for redis
+
+
+def get_redis_connection():
+    global redis_connection
+    return redis_connection
+
 
 @app.get("/", response_class=RedirectResponse)
 async def redirect_to_index():
     return "/static/index.html"
-
-r = redis.Redis(host='localhost', port=6379, decode_responses=True)
 
 field_names = [
     "timestamp",
@@ -73,20 +78,24 @@ def generate_dummy_data():
         yield data
 
 
-@app.websocket("/dummy")
+@app.websocket("/ws/get/dummy")
 async def websocket_dummy_redis(websocket: WebSocket):
     await websocket.accept()
     dummy_data_generator = generate_dummy_data()
     while True:
-        data = next(dummy_data_generator)
-        response_data = json.dumps(data)
-        await websocket.send_text(data)
-        await asyncio.sleep(0.3)
+        try:
+            data = next(dummy_data_generator)
+            response_data = json.dumps(data)
+            await websocket.send_text(response_data)
+            await asyncio.sleep(0.3)
+        except Exception as e:
+            print(f"WebSocket error: {e}")
+            break
+    await websocket.close()
 
 
-@app.websocket("/redis")
+@app.websocket("/ws/get/database")
 async def websocket_redis(websocket: WebSocket):
-    print("/redis")
     await websocket.accept()
     dummy_data_generator = generate_dummy_data()
     last_id = '0'
@@ -95,13 +104,13 @@ async def websocket_redis(websocket: WebSocket):
         # NOTE: 自動生成だが、サーバを起動するたびに最初からのデータとなるので、ループしていることに注意
         data = next(dummy_data_generator)
         stream_key = data['group']
-        r.xadd(stream_key, data)
+        get_redis_connection().xadd(stream_key, data)
 
         time.sleep(0.3)
 
         try:
-            result = r.xread({stream_key: last_id},
-                             count=10, block=sleep_ms)
+            result = get_redis_connection().xread({stream_key: last_id},
+                                                  count=10, block=sleep_ms)
             if len(result) == 0:
                 continue
             # only for 1st stream
@@ -115,14 +124,39 @@ async def websocket_redis(websocket: WebSocket):
                 # print(response_data)
                 await websocket.send_text(response_data)
                 await asyncio.sleep(0.3)
-        except ConnectionError as e:
-            print("ERROR REDIS CONNECTION: {}".format(e))
+        except Exception as e:
+            print(f"WebSocket or Redis error: {e}")
             break
+    await websocket.close()
+
+
+@app.websocket("/ws/set/database")
+async def websocket_redis(websocket: WebSocket):
+    await websocket.accept()
+    while True:
+        try:
+            request_data = await websocket.receive_text()
+            json_data = json.loads(request_data)
+            if not isinstance(json_data, list):
+                json_data = [json_data]
+            response_data = []
+            for object in json_data:
+                stream_key = object['group']
+                get_redis_connection().xadd(stream_key, object)
+                response_data.append(
+                    json.dumps({"stream_key": stream_key, "status": "OK"}))
+            await websocket.send_text(response_data)
+        except Exception as e:
+            print(f"WebSocket or Redis error: {e}")
+            break
+    await websocket.close()
 
 
 def main():
     parser = argparse.ArgumentParser(
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser.add_argument('--redis-host', default='localhost')
+    parser.add_argument('--redis-port', default=6379)
     parser.add_argument('-p', '--port', default=8765)
     parser.add_argument('-v', '--verbose', action='store_true')
     parser.add_argument('args', nargs='*')
@@ -130,6 +164,13 @@ def main():
     args, extra_args = parser.parse_known_args()
     print(vars(args))
 
+    global redis_connection
+    redis_connection = redis.Redis(
+        host=args.redis_host,
+        port=args.redis_port,
+        decode_responses=True)
+
+    import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=args.port)
 
 

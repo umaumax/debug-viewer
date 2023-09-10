@@ -407,8 +407,8 @@ init_mouse_control(canvas)
 // connection to the server
 const host = window.location.hostname
 const port = 8765
-// const path = 'dummy'
-const path = 'redis'
+// const path = 'ws/get/dummy'
+const path = 'ws/get/database'
 const url = 'ws://' + host + ':' + port + '/' + path
 // const url = 'http://' + host + ':' + port + '/' + path
 console.log(url)
