@@ -170,8 +170,8 @@ class CustomLine {
     }
 
     update_by_json_data(data) {
-        const position = new THREE.Vector3(data['position.x'], data['position.y'], data['position.z'])
-        // console.log(this.line.geometry)
+        const values = data['data']
+        const position = new THREE.Vector3(values['position.x'], values['position.y'], values['position.z'])
         this.line = addPointToLine(this.line, position.x, position.y, position.z, this.line.material, this.scene)
     }
 
@@ -230,7 +230,8 @@ class CustomSphere {
     }
 
     update_by_json_data(data) {
-        const position = new THREE.Vector3(data['position.x'], data['position.y'], data['position.z']);
+        const values = data['data']
+        const position = new THREE.Vector3(values['position.x'], values['position.y'], values['position.z']);
         const sphereGeometry = new THREE.SphereGeometry(0.02, 16, 16);
         const sphere = new THREE.Mesh(sphereGeometry, this.material);
         sphere.position.copy(position);
@@ -260,8 +261,9 @@ class CustomArrow {
     }
 
     update_by_json_data(data) {
-        const position = new THREE.Vector3(data['position.x'], data['position.y'], data['position.z'])
-        const rotation = new THREE.Euler().setFromQuaternion(new THREE.Quaternion().set(data['rotation.x'], data['rotation.y'], data['rotation.z'], data['rotation.z']));
+        const values = data['data']
+        const position = new THREE.Vector3(values['position.x'], values['position.y'], values['position.z'])
+        const rotation = new THREE.Euler().setFromQuaternion(new THREE.Quaternion().set(values['rotation.x'], values['rotation.y'], values['rotation.z'], values['rotation.z']));
         this.position.copy(position);
         this.rotation.copy(rotation);
         this.update()
@@ -417,7 +419,7 @@ const socket = new WebSocket(url);
 
 socket.addEventListener('open', (event) => {
     // socket.on('connection', (socket) => {
-    console.log('connection opend');
+    console.log('connection opened');
 
     const query_data = {
         group: 'session-test',

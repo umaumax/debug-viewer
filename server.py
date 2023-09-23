@@ -40,6 +40,7 @@ def generate_dummy_data():
     angular_velocity = np.array([0.1, 0.2, 0.3])
     dt = 0.1
     q = quaternion.from_euler_angles([0, 0, 0])
+    process = "sample application"
     label = "ARKit tracking pose"
     while True:
         timestamp = int(time.time())
@@ -54,15 +55,18 @@ def generate_dummy_data():
         data = {
             "timestamp": timestamp,
             "group": group,
+            "process": process,
             "sequential_id": sequential_id,
             "label": label,
-            "position.x": x,
-            "position.y": y,
-            "position.z": z,
-            "rotation.x": q.x,
-            "rotation.y": q.y,
-            "rotation.z": q.z,
-            "rotation.w": q.w,
+            "data": {
+                "position.x": x,
+                "position.y": y,
+                "position.z": z,
+                "rotation.x": q.x,
+                "rotation.y": q.y,
+                "rotation.z": q.z,
+                "rotation.w": q.w,
+            }
         }
 
         yield data
@@ -120,7 +124,7 @@ async def websocket_redis(websocket: WebSocket):
             key, messages = result[0]
             last_id = messages[-1][0]
             for id, data in messages:
-                response_data = json.dumps(data)
+                response_data = data['value']  # json format string
                 logger.debug(f"/ws/get/database: {response_data}")
                 await websocket.send_text(response_data)
                 await asyncio.sleep(0.1)
@@ -136,7 +140,6 @@ async def websocket_redis(websocket: WebSocket):
     await websocket.accept()
     while True:
         try:
-            # logger.debug(f"/ws/set/database: {websocket.application_state}")
             if websocket.application_state == WebSocketState.DISCONNECTED:
                 break
             request_data = await websocket.receive_text()
@@ -147,9 +150,18 @@ async def websocket_redis(websocket: WebSocket):
             response_data = []
             for object in json_data:
                 stream_key = object['group']
-                await get_redis_connection().xadd(stream_key, object)
+                sequential_id = object['sequential_id']
+                await get_redis_connection().xadd(stream_key, {'value': json.dumps(object)})
                 response_data.append(
-                    json.dumps({"stream_key": stream_key, "status": "OK"}))
+                    json.dumps(
+                        {
+                            "type": "/ws/set/database",
+                            "ok": True,
+                            "code": 0,
+                            "message": f"Successfully saved data for {stream_key}",
+                            "data": {"sequential_id": sequential_id}
+                        }
+                    ))
                 websocket.accept
             await websocket.send_text(response_data)
         except WebSocketDisconnect:
