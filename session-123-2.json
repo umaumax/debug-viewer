@@ -1,7 +1,7 @@
 [
   {
     "timestamp": "1694269265",
-    "group": "session-123",
+    "group": "session-test",
     "sequential_id": "19",
     "label": "Sample pose",
     "position.x": "-1.1",
@@ -14,7 +14,7 @@
   },
   {
     "timestamp": "1694269265",
-    "group": "session-123",
+    "group": "session-test",
     "sequential_id": "20",
     "label": "Sample pose",
     "position.x": "-1.0",
@@ -27,7 +27,7 @@
   },
   {
     "timestamp": "1694269266",
-    "group": "session-123",
+    "group": "session-test",
     "sequential_id": "21",
     "label": "Sample pose",
     "position.x": "-0.9",

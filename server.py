@@ -55,7 +55,7 @@ async def redirect_to_index():
 
 def generate_dummy_data():
     sequential_id = 0
-    group = "session-123"
+    group = "session-test"
     angular_velocity = np.array([0.1, 0.2, 0.3])
     dt = 0.1
     q = quaternion.from_euler_angles([0, 0, 0])
