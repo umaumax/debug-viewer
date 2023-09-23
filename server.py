@@ -125,15 +125,9 @@ async def websocket_redis(websocket: WebSocket):
         await websocket.close()
         return
 
-    # dummy_data_generator = generate_dummy_data()
     last_id = '0'
     sleep_ms = 100  # if 0, xread() is blocked until getting data
     while True:
-        # data = next(dummy_data_generator)
-        # stream_key = data['group']
-        # get_redis_connection().xadd(stream_key, data)
-        # time.sleep(0.3)
-
         try:
             result = await get_redis_connection().xread({stream_key: last_id},
                                                         count=10, block=sleep_ms)
