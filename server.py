@@ -5,6 +5,7 @@ import math
 import quaternion
 import numpy as np
 import argparse
+import os
 
 import logging
 import coloredlogs
@@ -16,7 +17,25 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import RedirectResponse
 from starlette.websockets import WebSocketState
 
-app = FastAPI()
+
+from contextlib import asynccontextmanager
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # startup
+    import uvicorn
+    uvicorn_logger = logging.getLogger("uvicorn")
+    uvicorn_logger_formatter = uvicorn.logging.ColourizedFormatter(
+        '{asctime} {name}[{process}] {levelprefix} [{filename}:{lineno}] {message}',
+        style="{", use_colors=True)
+    uvicorn_logger.handlers[0].setFormatter(uvicorn_logger_formatter)
+    logger.info("startup event")
+    yield
+    # shutdown
+    logger.info("shutdown event")
+
+app = FastAPI(lifespan=lifespan)
 app.mount("/static", StaticFiles(directory="static", html=True), name="static")
 
 redis_connection = None
@@ -180,14 +199,18 @@ def main():
     parser.add_argument('--redis-port', default=6379)
     parser.add_argument('-p', '--port', default=8765)
     parser.add_argument('-v', '--verbose', action='store_true')
+    parser.add_argument('--disable-color', action='store_true')
     parser.add_argument('args', nargs='*')
 
     args, extra_args = parser.parse_known_args()
 
-    log_level = logging.INFO
+    log_level = os.environ.get('LOG_LEVEL', 'INFO').upper()
     if args.verbose:
         log_level = logging.DEBUG
-    coloredlogs.install(level=log_level)
+    coloredlogs.install(
+        level=log_level,
+        isatty=not args.disable_color,
+        fmt='%(asctime)s %(hostname)s %(name)s[%(process)d] %(levelname)s: [%(filename)s:%(lineno)d] %(message)s')
 
     logger.info(vars(args))
 
