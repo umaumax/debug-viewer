@@ -7,7 +7,7 @@ import numpy as np
 import argparse
 
 
-def generate_dummy_data(group, label):
+def generate_dummy_data(group, process, label):
     sequential_id = 0
     angular_velocity = np.array([0.1, 0.2, 0.3])
     dt = 0.1
@@ -25,15 +25,18 @@ def generate_dummy_data(group, label):
         data = {
             "timestamp": timestamp,
             "group": group,
+            "process": process,
             "sequential_id": sequential_id,
             "label": label,
-            "position.x": x,
-            "position.y": y,
-            "position.z": z,
-            "rotation.x": q.x,
-            "rotation.y": q.y,
-            "rotation.z": q.z,
-            "rotation.w": q.w,
+            "data": {
+                "position.x": x,
+                "position.y": y,
+                "position.z": z,
+                "rotation.x": q.x,
+                "rotation.y": q.y,
+                "rotation.z": q.z,
+                "rotation.w": q.w,
+            }
         }
 
         yield data
@@ -43,6 +46,7 @@ def main():
     parser = argparse.ArgumentParser(
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('--group', default='session-test')
+    parser.add_argument('--process', default='sample application')
     parser.add_argument('--label', default='ARKit tracking pose')
     parser.add_argument('--count', default=10, type=int)
     parser.add_argument('--offset', default=0, type=int)
@@ -50,7 +54,8 @@ def main():
 
     args, extra_args = parser.parse_known_args()
 
-    dummy_data_generator = generate_dummy_data(args.group, args.label)
+    dummy_data_generator = generate_dummy_data(
+        args.group, args.process, args.label)
 
     output_data = []
     for i in range(0, args.count + args.offset):
