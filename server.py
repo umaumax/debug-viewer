@@ -60,7 +60,7 @@ def generate_dummy_data():
     dt = 0.1
     q = quaternion.from_euler_angles([0, 0, 0])
     process = "sample application"
-    label = "ARKit tracking pose"
+    label = "Sample pose"
     while True:
         timestamp = int(time.time())
         sequential_id += 1

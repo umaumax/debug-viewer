@@ -278,9 +278,9 @@ class CustomArrow {
 }
 
 const customArrow = new CustomArrow(scene);
-objectListMap.addObjectWithLabel(customArrow, "ARKit tracking pose")
-objectListMap.addObjectWithLabel(line, "ARKit tracking pose")
-objectListMap.addObjectWithLabel(points, "ARKit tracking pose")
+objectListMap.addObjectWithLabel(customArrow, "Sample pose")
+objectListMap.addObjectWithLabel(line, "Sample pose")
+objectListMap.addObjectWithLabel(points, "Sample pose")
 
 function set_axis(scene) {
     const xAxisGeometry = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0, 0), new THREE.Vector3(1, 0, 0)]);

@@ -47,7 +47,7 @@ def main():
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('--group', default='session-test')
     parser.add_argument('--process', default='sample application')
-    parser.add_argument('--label', default='ARKit tracking pose')
+    parser.add_argument('--label', default='Sample pose')
     parser.add_argument('--count', default=10, type=int)
     parser.add_argument('--offset', default=0, type=int)
     parser.add_argument('args', nargs='*')
