@@ -1,15 +1,14 @@
 body {
     margin: 0;
-    background-color: #3E66F0;
+    background-color: #edf2f6;
     font-family: "serif";
+    color: #2d2e2e;
 }
 
 .left-pane {
     flex: 3;
-    background-color: #0F40C5;
+    background-color: #FFFFFF;
     align-items: center;
-    color: #f3ffe8;
-    /* padding: 10px; */
     margin: 8px
 }
 
@@ -24,21 +23,16 @@ body {
 }
 
 .right-pane {
-    background-color: #0F40C5;
-    color: #f3ffe8;
-    /* padding: 10px; */
+    background-color: #FFFFFF;
     margin: 8px
 }
 
 .top-pane {
     padding: 8px;
-    color: #f3ffe8;
-    /* margin: 10px */
 }
 
 .bottom-pane {
-    background-color: #0F40C5;
-    color: #f3ffe8;
+    background-color: #FFFFFF;
     padding: 8px;
     margin: 4px
 }
