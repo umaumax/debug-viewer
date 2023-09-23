@@ -1,0 +1,162 @@
+[
+  {
+    "timestamp": 1695480251,
+    "group": "session-test",
+    "process": "sample application",
+    "sequential_id": 11,
+    "label": "Sample pose",
+    "data": {
+      "position.x": -1.9000000000000001,
+      "position.y": -0.9463000876874145,
+      "position.z": 0.8347127848391598,
+      "rotation.x": 0.001088996578775476,
+      "rotation.y": 0.10889602786475158,
+      "rotation.z": 0.21778116621746307,
+      "rotation.w": 0.9699030017701215
+    }
+  },
+  {
+    "timestamp": 1695480251,
+    "group": "session-test",
+    "process": "sample application",
+    "sequential_id": 12,
+    "label": "Sample pose",
+    "data": {
+      "position.x": -1.8,
+      "position.y": -0.9738476308781951,
+      "position.z": 0.6346928759426347,
+      "rotation.x": 0.001185711415444034,
+      "rotation.y": 0.11856718914666929,
+      "rotation.z": 0.23712252167322956,
+      "rotation.w": 0.9642164308191526
+    }
+  },
+  {
+    "timestamp": 1695480251,
+    "group": "session-test",
+    "process": "sample application",
+    "sequential_id": 13,
+    "label": "Sample pose",
+    "data": {
+      "position.x": -1.7000000000000002,
+      "position.y": -0.9916648104524686,
+      "position.z": 0.37797774271298107,
+      "rotation.x": 0.0012818334369154747,
+      "rotation.y": 0.12817907088493907,
+      "rotation.z": 0.2563453239696052,
+      "rotation.w": 0.9580477845958582
+    }
+  },
+  {
+    "timestamp": 1695480251,
+    "group": "session-test",
+    "process": "sample application",
+    "sequential_id": 14,
+    "label": "Sample pose",
+    "data": {
+      "position.x": -1.6,
+      "position.y": -0.9995736030415051,
+      "position.z": 0.08749898343944727,
+      "rotation.x": 0.0013773145854631338,
+      "rotation.y": 0.137726867467088,
+      "rotation.z": 0.27543996236220136,
+      "rotation.w": 0.9514001472125936
+    }
+  },
+  {
+    "timestamp": 1695480251,
+    "group": "session-test",
+    "process": "sample application",
+    "sequential_id": 15,
+    "label": "Sample pose",
+    "data": {
+      "position.x": -1.5,
+      "position.y": -0.9974949866040544,
+      "position.z": -0.2107957994307797,
+      "rotation.x": 0.0014721071237749125,
+      "rotation.y": 0.14720580532103175,
+      "rotation.z": 0.29439689018420256,
+      "rotation.w": 0.9442768422609298
+    }
+  },
+  {
+    "timestamp": 1695480251,
+    "group": "session-test",
+    "process": "sample application",
+    "sequential_id": 16,
+    "label": "Sample pose",
+    "data": {
+      "position.x": -1.4000000000000001,
+      "position.y": -0.9854497299884603,
+      "position.z": -0.4902608213406994,
+      "rotation.x": 0.001566163658820305,
+      "rotation.y": 0.1566111453016974,
+      "rotation.z": 0.31320662961937357,
+      "rotation.w": 0.9366814311499704
+    }
+  },
+  {
+    "timestamp": 1695480251,
+    "group": "session-test",
+    "process": "sample application",
+    "sequential_id": 17,
+    "label": "Sample pose",
+    "data": {
+      "position.x": -1.3,
+      "position.y": -0.963558185417193,
+      "position.z": -0.7259323042001399,
+      "rotation.x": 0.0016594371655452899,
+      "rotation.y": 0.1659381850604342,
+      "rotation.z": 0.3318597764406438,
+      "rotation.w": 0.9286177113257684
+    }
+  },
+  {
+    "timestamp": 1695480251,
+    "group": "session-test",
+    "process": "sample application",
+    "sequential_id": 18,
+    "label": "Sample pose",
+    "data": {
+      "position.x": -1.2000000000000002,
+      "position.y": -0.9320390859672264,
+      "position.z": -0.8967584163341468,
+      "rotation.x": 0.0017518810103832566,
+      "rotation.y": 0.17518226139602724,
+      "rotation.z": 0.3503470047118996,
+      "rotation.w": 0.920089714372734
+    }
+  },
+  {
+    "timestamp": 1695480251,
+    "group": "session-test",
+    "process": "sample application",
+    "sequential_id": 19,
+    "label": "Sample pose",
+    "data": {
+      "position.x": -1.1,
+      "position.y": -0.8912073600614354,
+      "position.z": -0.9874797699088649,
+      "rotation.x": 0.0018434489745701907,
+      "rotation.y": 0.18433875258613858,
+      "rotation.z": 0.36865907145063365,
+      "rotation.w": 0.911101703997979
+    }
+  },
+  {
+    "timestamp": 1695480251,
+    "group": "session-test",
+    "process": "sample application",
+    "sequential_id": 20,
+    "label": "Sample pose",
+    "data": {
+      "position.x": -1,
+      "position.y": -0.8414709848078965,
+      "position.z": -0.9899924966004454,
+      "rotation.x": 0.0019340952772524773,
+      "rotation.y": 0.19340308069801068,
+      "rotation.z": 0.3867868212491202,
+      "rotation.w": 0.9016581738996093
+    }
+  }
+]
