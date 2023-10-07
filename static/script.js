@@ -271,6 +271,7 @@ const customArrow = new CustomArrow(scene);
 objectListMap.addObjectWithLabel(customArrow, "Sample pose")
 objectListMap.addObjectWithLabel(line, "Sample pose")
 objectListMap.addObjectWithLabel(points, "Sample pose")
+objectListMap.addObjectWithLabel(viewCones, "Sample pose")
 
 function set_axis(scene) {
     const xAxisGeometry = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0, 0), new THREE.Vector3(1, 0, 0)]);
