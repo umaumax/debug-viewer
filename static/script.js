@@ -13,7 +13,7 @@ camera.position.z = 1.0;
 camera.lookAt(scene.position);
 
 const canvas = document.getElementById('canvas')
-const canvas_container = document.getElementById('canvas-container')
+const canvasContainer = document.getElementById('canvas-container')
 const renderer = new THREE.WebGLRenderer({
     canvas: canvas
 });
@@ -22,19 +22,19 @@ const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
 controls.dampingFactor = 0.05;
 
-function update_canvas() {
+function updateCanvas() {
     const ratio = 16.0 / 9.0
-    var canvasWidth = canvas_container.offsetWidth;
+    var canvasWidth = canvasContainer.offsetWidth;
     var canvasHeight = canvasWidth / ratio;
     camera.aspect = canvasWidth / canvasHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(canvasWidth, canvasHeight);
 }
-update_canvas()
-canvas_container.appendChild(renderer.domElement);
+updateCanvas()
+canvasContainer.appendChild(renderer.domElement);
 
 window.addEventListener('resize', () => {
-    update_canvas()
+    updateCanvas()
 });
 
 class ObjectListMap {
@@ -124,7 +124,7 @@ class CustomLine {
         this.scene.add(this.line);
     }
 
-    update_by_json_data(data) {
+    updateByJsonData(data) {
         const values = data['data']
         const position = new THREE.Vector3(values['position.x'], values['position.y'], values['position.z'])
         this.line = addPointToLine(this.line, position.x, position.y, position.z, this.line.material, this.scene)
@@ -163,7 +163,7 @@ class CustomSphere {
         });
     }
 
-    update_by_json_data(data) {
+    updateByJsonData(data) {
         const values = data['data']
         const position = new THREE.Vector3(values['position.x'], values['position.y'], values['position.z']);
         const sphereGeometry = new THREE.SphereGeometry(0.01, 8, 8);
@@ -195,7 +195,7 @@ class ViewCones {
         this.i = 0
     }
 
-    update_by_json_data(data) {
+    updateByJsonData(data) {
         const values = data['data']
         const position = new THREE.Vector3(values['position.x'], values['position.y'], values['position.z']);
         const rotation = new THREE.Euler().setFromQuaternion(new THREE.Quaternion().set(values['rotation.x'], values['rotation.y'], values['rotation.z'], values['rotation.w']));
@@ -205,11 +205,11 @@ class ViewCones {
             return
         }
 
-        const view_cone = createViewCone(this.material);
-        view_cone.position.copy(position);
-        view_cone.rotation.copy(rotation);
-        view_cone.rotateX(-Math.PI / 2);
-        this.scene.add(view_cone);
+        const viewCone = createViewCone(this.material);
+        viewCone.position.copy(position);
+        viewCone.rotation.copy(rotation);
+        viewCone.rotateX(-Math.PI / 2);
+        this.scene.add(viewCone);
     }
 
     update() {}
@@ -245,7 +245,7 @@ class CustomArrow {
         scene.add(this.body);
     }
 
-    update_by_json_data(data) {
+    updateByJsonData(data) {
         const values = data['data']
         const position = new THREE.Vector3(values['position.x'], values['position.y'], values['position.z'])
         const rotation = new THREE.Euler().setFromQuaternion(new THREE.Quaternion().set(values['rotation.x'], values['rotation.y'], values['rotation.z'], values['rotation.w']));
@@ -282,7 +282,7 @@ objectListMap.addObjectWithLabel(line, "Sample pose")
 objectListMap.addObjectWithLabel(points, "Sample pose")
 objectListMap.addObjectWithLabel(viewCones, "Sample pose")
 
-function set_axis(scene) {
+function setAxis(scene) {
     const xAxisGeometry = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0, 0), new THREE.Vector3(1, 0, 0)]);
     const xAxisMaterial = new THREE.LineBasicMaterial({
         color: 0xff0000 // X:Red
@@ -304,7 +304,7 @@ function set_axis(scene) {
     const zAxisLine = new THREE.Line(zAxisGeometry, zAxisMaterial);
     scene.add(zAxisLine);
 }
-set_axis(scene)
+setAxis(scene)
 
 const animate = () => {
     requestAnimationFrame(animate);
@@ -314,7 +314,7 @@ const animate = () => {
 };
 animate();
 
-function init_ui_control(canvas) {
+function initUiControl(canvas) {
     canvas.addEventListener("keydown", function(e) {
         console.log("keydown:", e.key)
         if (e.key == 'r') {
@@ -324,7 +324,7 @@ function init_ui_control(canvas) {
     }, false);
     return
 }
-init_ui_control(canvas)
+initUiControl(canvas)
 
 // connection to the server
 const host = window.location.hostname
@@ -337,12 +337,12 @@ const socket = new WebSocket(url);
 socket.addEventListener('open', (event) => {
     console.log('connection opened');
 
-    const query_data = {
+    const queryData = {
         group: 'session-test',
         timestamp: '12345'
     };
 
-    socket.send(JSON.stringify(query_data));
+    socket.send(JSON.stringify(queryData));
 });
 
 socket.addEventListener('message', (event) => {
@@ -351,7 +351,7 @@ socket.addEventListener('message', (event) => {
 
     const timestamp = data.timestamp;
     const group = data.group;
-    const sequential_id = data.sequential_id;
+    const sequentialId = data.sequentialId;
     const label = data.label;
     if (!objectListMap.hasObjectWithLabel(label)) {
         console.log('label skipped:', label);
@@ -359,7 +359,7 @@ socket.addEventListener('message', (event) => {
     }
     const objects = objectListMap.getObjectsByLabel(label)
     objects.forEach(function(object) {
-        object.update_by_json_data(data)
+        object.updateByJsonData(data)
     });
 
     const timestampInput = document.getElementById('timestamp');
