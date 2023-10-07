@@ -171,7 +171,7 @@ class CustomSphere {
     updateByJsonData(data) {
         const values = data['data']
         const position = new THREE.Vector3(values['position.x'], values['position.y'], values['position.z']);
-        const radius = 0.01
+        const radius = 0.0075
         const widthSegments = 4
         const heightSegments = 4
         const sphereGeometry = new THREE.SphereGeometry(radius, widthSegments, heightSegments);
