@@ -214,31 +214,56 @@ class CustomArrow {
     constructor(scene, color) {
         this.scene = scene;
 
-        this.direction = new THREE.Vector3(1, 0, 0);
+        const direction = new THREE.Vector3(1, 0, 0);
         this.position = new THREE.Vector3(0, 0, 0);
         this.rotation = new THREE.Euler(0, 0, 0);
 
-        this.length = 1;
+        this.length = 0.5;
         this.color = color || 0xffffff;
 
-        this.arrow = new THREE.ArrowHelper(this.direction, this.position, this.length, this.color);
-        scene.add(this.arrow);
+        this.arrowX = new THREE.ArrowHelper(direction, this.position, this.length, 0xff0000);
+        this.arrowY = new THREE.ArrowHelper(direction, this.position, this.length, 0x00ff00);
+        this.arrowZ = new THREE.ArrowHelper(direction, this.position, this.length, 0x0000ff);
+        scene.add(this.arrowX);
+        scene.add(this.arrowY);
+        scene.add(this.arrowZ);
+
+        const geometry = new THREE.BoxGeometry(0.25, 0.1, 0.02);
+        const material = new THREE.MeshBasicMaterial({
+            color: 0xdddddd
+        });
+        this.body = new THREE.Mesh(geometry, material);
+        scene.add(this.body);
     }
 
     update_by_json_data(data) {
         const values = data['data']
         const position = new THREE.Vector3(values['position.x'], values['position.y'], values['position.z'])
-        const rotation = new THREE.Euler().setFromQuaternion(new THREE.Quaternion().set(values['rotation.x'], values['rotation.y'], values['rotation.z'], values['rotation.z']));
+        const rotation = new THREE.Euler().setFromQuaternion(new THREE.Quaternion().set(values['rotation.x'], values['rotation.y'], values['rotation.z'], values['rotation.w']));
         this.position.copy(position);
         this.rotation.copy(rotation);
         this.update()
     }
 
     update() {
-        this.arrow.position.copy(this.position);
-        const directionVector = new THREE.Vector3(1, 0, 0);
-        directionVector.applyEuler(this.rotation);
-        this.arrow.setDirection(directionVector);
+        this.arrowX.position.copy(this.position);
+        this.arrowY.position.copy(this.position);
+        this.arrowZ.position.copy(this.position);
+        this.body.position.copy(this.position)
+
+        const directionVectorX = new THREE.Vector3(1, 0, 0);
+        directionVectorX.applyEuler(this.rotation);
+        this.arrowX.setDirection(directionVectorX);
+
+        const directionVectorY = new THREE.Vector3(0, 1, 0);
+        directionVectorY.applyEuler(this.rotation);
+        this.arrowY.setDirection(directionVectorY);
+
+        const directionVectorZ = new THREE.Vector3(0, 0, 1);
+        directionVectorZ.applyEuler(this.rotation);
+        this.arrowZ.setDirection(directionVectorZ);
+
+        this.body.rotation.copy(this.rotation)
     }
 }
 
