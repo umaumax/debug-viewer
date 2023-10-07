@@ -314,11 +314,43 @@ function setAxis(scene) {
 }
 setAxis(scene)
 
+function createFocusPoint() {
+    const xAxisGeometry = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(-1, 0, 0), new THREE.Vector3(1, 0, 0)]);
+    const yAxisGeometry = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, -1, 0), new THREE.Vector3(0, 1, 0)]);
+    const zAxisGeometry = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0, -1), new THREE.Vector3(0, 0, 1)]);
+
+    const xAxisMaterial = new THREE.LineBasicMaterial({
+        color: 0xff0000
+    });
+    const yAxisMaterial = new THREE.LineBasicMaterial({
+        color: 0x00ff00
+    });
+    const zAxisMaterial = new THREE.LineBasicMaterial({
+        color: 0x0000ff
+    });
+
+    const xAxisLine = new THREE.Line(xAxisGeometry, xAxisMaterial);
+    const yAxisLine = new THREE.Line(yAxisGeometry, yAxisMaterial);
+    const zAxisLine = new THREE.Line(zAxisGeometry, zAxisMaterial);
+
+    const focusPoint = new THREE.Object3D();
+    focusPoint.add(xAxisLine);
+    focusPoint.add(yAxisLine);
+    focusPoint.add(zAxisLine);
+
+    focusPoint.scale.set(0.1, 0.1, 0.1)
+}
+
+const focusPoint = createFocusPoint()
+scene.add(focusPoint);
+
 const animate = () => {
     requestAnimationFrame(animate);
     // required if controls.enableDamping or controls.autoRotate are set to true
     controls.update();
     renderer.render(scene, camera);
+
+    focusPoint.position.copy(controls.target)
 };
 animate();
 
