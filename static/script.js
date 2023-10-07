@@ -344,13 +344,22 @@ function createFocusPoint() {
 const focusPoint = createFocusPoint()
 scene.add(focusPoint);
 
+var auto_mode = false;
+const cameraDiff = new THREE.Vector3();
 const animate = () => {
     requestAnimationFrame(animate);
     // required if controls.enableDamping or controls.autoRotate are set to true
-    controls.update();
     renderer.render(scene, camera);
 
     focusPoint.position.copy(controls.target)
+
+    const targetPoint = customArrow.body.position
+    if (auto_mode) {
+        camera.position.copy(targetPoint.clone().add(cameraDiff))
+        camera.lookAt(targetPoint);
+    } else {
+        controls.update();
+    }
 };
 animate();
 
@@ -360,6 +369,25 @@ function initUiControl(canvas) {
         if (e.key == 'r') {
             console.log("reset")
             controls.reset()
+        }
+        if (e.key == 'a') {
+            console.log("switch auto mode and manual mode")
+            auto_mode = !auto_mode
+            const targetPoint = customArrow.body.position
+            const info = document.getElementById('info')
+            if (auto_mode) {
+                info.innerHTML = "Mode: auto"
+                cameraDiff.copy(controls.object.position.clone().sub(controls.target))
+                console.log("cameraDiff:", cameraDiff, controls.object.position, controls.target)
+
+                controls.enabled = false
+            } else {
+                info.innerHTML = "Mode: manual"
+                controls.object.position.copy(camera.position)
+                controls.target.copy(targetPoint)
+
+                controls.enabled = true
+            }
         }
     }, false);
     return
