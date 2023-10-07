@@ -201,6 +201,7 @@ class ViewCones {
         this.scene = scene;
         this.material = material
         this.i = 0
+        this.objects = []
     }
 
     updateByJsonData(data) {
@@ -213,10 +214,21 @@ class ViewCones {
             return
         }
 
-        const viewCone = createViewCone(this.material);
+        this.objects.forEach((object) => {
+            var hslColor = {
+                h: 0,
+                s: 0,
+                l: 0
+            };
+            object.material.color.getHSL(hslColor);
+            object.material.color.setHSL(hslColor.h, hslColor.s, Math.max(hslColor.l * 0.9, 0.05));
+        });
+
+        const viewCone = createViewCone(this.material.clone());
         viewCone.position.copy(position);
         viewCone.rotation.copy(rotation);
         viewCone.rotateX(-Math.PI / 2);
+        this.objects.push(viewCone);
         this.scene.add(viewCone);
     }
 
