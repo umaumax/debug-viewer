@@ -1,10 +1,15 @@
+import * as THREE from "three";
+import {
+    OrbitControls
+} from "three/addons/controls/OrbitControls.js";
+
 const scene = new THREE.Scene();
 
 const fov = 75.0
 const camera = new THREE.PerspectiveCamera(fov, window.innerWidth / window.innerHeight, 0.1, 1000);
-camera.position.y = 1.5;
-camera.position.x = -1.0;
-camera.position.z = 3;
+camera.position.y = 1.0;
+camera.position.x = 1.0;
+camera.position.z = 1.0;
 camera.lookAt(scene.position);
 
 const canvas = document.getElementById('canvas')
@@ -12,6 +17,10 @@ const canvas_container = document.getElementById('canvas-container')
 const renderer = new THREE.WebGLRenderer({
     canvas: canvas
 });
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.05;
 
 function update_canvas() {
     const ratio = 16.0 / 9.0
@@ -299,72 +308,23 @@ set_axis(scene)
 
 const animate = () => {
     requestAnimationFrame(animate);
+    // required if controls.enableDamping or controls.autoRotate are set to true
+    controls.update();
     renderer.render(scene, camera);
 };
 animate();
 
-function init_mouse_control(canvas) {
-    let isDragging = false;
-    let previousMousePosition = {
-        x: 0,
-        y: 0
-    };
-
-    canvas.addEventListener('mousedown', (event) => {
-        isDragging = true;
-        previousMousePosition = {
-            x: event.clientX,
-            y: event.clientY
-        };
-    });
-
-    canvas.addEventListener('mouseup', () => {
-        isDragging = false;
-    });
-
-    canvas.addEventListener('mousemove', (event) => {
-        if (!isDragging) return;
-
-        const deltaMove = {
-            x: event.clientX - previousMousePosition.x,
-            y: event.clientY - previousMousePosition.y
-        };
-
-        const speed = 0.1;
-        camera.position.x += deltaMove.x * speed;
-        camera.position.y -= deltaMove.y * speed;
-
-        camera.lookAt(scene.position);
-        renderer.render(scene, camera);
-
-        previousMousePosition = {
-            x: event.clientX,
-            y: event.clientY
-        };
-    });
-
-    canvas.addEventListener('mousewheel', (event) => {
-        const zoomSpeed = 0.05;
-        const deltaY = event.deltaY;
-
-        if (deltaY < 0) {
-            camera.zoom += zoomSpeed;
-        } else {
-            camera.zoom -= zoomSpeed;
+function init_ui_control(canvas) {
+    canvas.addEventListener("keydown", function(e) {
+        console.log("keydown:", e.key)
+        if (e.key == 'r') {
+            console.log("reset")
+            controls.reset()
         }
-
-        const minZoom = 0.1;
-        const maxZoom = 5.0;
-        camera.zoom = Math.max(minZoom, Math.min(maxZoom, camera.zoom));
-
-        camera.updateProjectionMatrix();
-        renderer.render(scene, camera);
-
-        event.preventDefault();
-        event.stopPropagation();
-    });
+    }, false);
+    return
 }
-init_mouse_control(canvas)
+init_ui_control(canvas)
 
 // connection to the server
 const host = window.location.hostname

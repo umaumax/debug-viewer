@@ -19,7 +19,7 @@
                     <h4>Viewer</h4>
                 </div>
                 <div>
-                    <canvas id="canvas"></canvas>
+                    <canvas id="canvas" tabindex="0"></canvas>
                 </div>
             </div>
             <div class="right-pane rounded border border-1 col col-md-4">
@@ -48,8 +48,11 @@
         </div>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="./script.js"></script>
+    <script type="importmap">
+        { "imports": { "three": "https://unpkg.com/three@0.157.0/build/three.module.js",
+        "three/addons/": "https://unpkg.com/three@0.157.0/examples/jsm/" } }
+    </script>
+    <script type="module" src="./script.js"></script>
 </body>
 
 </html>
