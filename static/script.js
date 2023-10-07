@@ -37,6 +37,11 @@ window.addEventListener('resize', () => {
     updateCanvas()
 });
 
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.5)
+scene.add(ambientLight)
+const pointLight = new THREE.PointLight(0xFFFFFF, 2, 50, 1.0);
+scene.add(pointLight);
+
 class ObjectListMap {
     constructor() {
         this.map = new Map();
@@ -175,7 +180,7 @@ class CustomSphere {
     update() {}
 }
 
-const points = new CustomSphere(scene, new THREE.MeshBasicMaterial({
+const points = new CustomSphere(scene, new THREE.MeshLambertMaterial({
     color: 0x00ff00
 }));
 
