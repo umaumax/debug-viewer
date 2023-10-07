@@ -157,7 +157,7 @@ class CustomSphere {
     update_by_json_data(data) {
         const values = data['data']
         const position = new THREE.Vector3(values['position.x'], values['position.y'], values['position.z']);
-        const sphereGeometry = new THREE.SphereGeometry(0.02, 16, 16);
+        const sphereGeometry = new THREE.SphereGeometry(0.01, 8, 8);
         const sphere = new THREE.Mesh(sphereGeometry, this.material);
         sphere.position.copy(position);
         this.scene.add(sphere);
