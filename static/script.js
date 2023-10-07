@@ -339,9 +339,10 @@ function createFocusPoint() {
     focusPoint.add(zAxisLine);
 
     focusPoint.scale.set(0.1, 0.1, 0.1)
+    return focusPoint
 }
 
-const focusPoint = createFocusPoint()
+const focusPoint = createFocusPoint();
 scene.add(focusPoint);
 
 var auto_mode = false;
