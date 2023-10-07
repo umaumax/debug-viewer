@@ -170,6 +170,46 @@ const points = new CustomSphere(scene, new THREE.MeshBasicMaterial({
     color: 0x00ff00
 }));
 
+function createViewCone(material) {
+    const TILE_SIZE = 0.2
+    var geometry = new THREE.CylinderGeometry(1, TILE_SIZE * 3, TILE_SIZE * 3, 4);
+    geometry.rotateY(Math.PI / 4);
+    var cylinder = new THREE.Mesh(geometry, material);
+    cylinder.scale.set(0.2, 0.2, 0.1)
+    return cylinder;
+}
+
+class ViewCones {
+    constructor(scene, material) {
+        this.scene = scene;
+        this.material = material
+        this.i = 0
+    }
+
+    update_by_json_data(data) {
+        const values = data['data']
+        const position = new THREE.Vector3(values['position.x'], values['position.y'], values['position.z']);
+        const rotation = new THREE.Euler().setFromQuaternion(new THREE.Quaternion().set(values['rotation.x'], values['rotation.y'], values['rotation.z'], values['rotation.w']));
+        this.i += 1
+
+        if (this.i % 50 > 0) {
+            return
+        }
+
+        const view_cone = createViewCone(this.material);
+        view_cone.position.copy(position);
+        view_cone.rotation.copy(rotation);
+        view_cone.rotateX(-Math.PI / 2);
+        this.scene.add(view_cone);
+    }
+
+    update() {}
+}
+const viewCones = new ViewCones(scene, new THREE.MeshBasicMaterial({
+    color: 0xffff00,
+    wireframe: true
+}));
+
 class CustomArrow {
     constructor(scene, color) {
         this.scene = scene;
