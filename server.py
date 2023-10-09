@@ -17,8 +17,34 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import RedirectResponse
 from starlette.websockets import WebSocketState
 
+from tinydb import TinyDB
+from tinydb.storages import MemoryStorage
 
 from contextlib import asynccontextmanager
+
+db = TinyDB(storage=MemoryStorage)
+state_table = db.table('state')
+state_table.insert({'latest_stream_key': None})
+
+
+def set_latest_stream_key(stream_key):
+    state_table.update({'latest_stream_key': stream_key})
+
+
+def get_latest_stream_key():
+    result = state_table.all()
+    if result:
+        return result[0]['latest_stream_key']
+    return None
+
+
+async def set_initial_latest_stream_key():
+    result = await get_redis_connection().execute_command('SCAN 0 TYPE stream')
+    if len(result) < 2:
+        return
+    stream_keys = result[1]
+    stream_key = stream_keys[-1]
+    set_latest_stream_key(stream_key)
 
 
 @asynccontextmanager
@@ -125,6 +151,21 @@ async def websocket_redis(websocket: WebSocket):
         await websocket.close()
         return
 
+    if stream_key == 'latest':
+        while True:
+            stream_key = get_latest_stream_key()
+            if stream_key is not None:
+                break
+            await asyncio.sleep(0.1)
+    elif stream_key == 'new':
+        pre_stream_key = get_latest_stream_key()
+        while True:
+            stream_key = get_latest_stream_key()
+            if stream_key is not pre_stream_key:
+                break
+            await asyncio.sleep(0.1)
+    logger.info("stream_key is {}".format(stream_key))
+
     last_id = '0'
     sleep_ms = 100  # if 0, xread() is blocked until getting data
     while True:
@@ -163,6 +204,7 @@ async def websocket_redis(websocket: WebSocket):
             response_data = []
             for object in json_data:
                 stream_key = object['group']
+                set_latest_stream_key(stream_key)
                 sequential_id = object['sequential_id']
                 await get_redis_connection().xadd(stream_key, {'value': json.dumps(object)})
                 response_data.append(
@@ -213,6 +255,11 @@ def main():
         host=args.redis_host,
         port=args.redis_port,
         decode_responses=True)
+
+    asyncio.run(set_initial_latest_stream_key())
+
+    latest_stream_key = get_latest_stream_key()
+    logger.info("latest stream_key is {}".format(latest_stream_key))
 
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=args.port)

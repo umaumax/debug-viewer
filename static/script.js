@@ -415,11 +415,15 @@ const path = 'ws/get/database'
 const url = 'ws://' + host + ':' + port + '/' + path
 const socket = new WebSocket(url);
 
+const params = new Proxy(new URLSearchParams(window.location.search), {
+    get: (searchParams, prop) => searchParams.get(prop),
+});
+
 socket.addEventListener('open', (event) => {
     console.log('connection opened');
 
     const queryData = {
-        group: 'session-test',
+        group: params.group ? params.group : 'new',
         timestamp: '12345'
     };
 
