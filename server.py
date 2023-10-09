@@ -181,7 +181,7 @@ async def websocket_redis(websocket: WebSocket):
                 response_data = data['value']  # json format string
                 logger.debug(f"/ws/get/database: {response_data}")
                 await websocket.send_text(response_data)
-                await asyncio.sleep(0.1)
+                await asyncio.sleep(0.001)
         except Exception as e:
             logger.error(f"WebSocket or Redis error: {e}")
             break
