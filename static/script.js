@@ -79,6 +79,26 @@ function ToVertices(geometry) {
     return vertices;
 }
 
+function stringToColor(str, minLightness = 50, maxLightness = 100) {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+        hash = str.charCodeAt(i) + ((hash << 5) - hash);
+    }
+
+    const colors = ['#FF0000', '#00FF00', '#0000FF']
+    const index = hash % colors.length
+    return colors[index]
+
+    // const lightness = (hash % (maxLightness - minLightness)) + minLightness;
+    //
+    // const hue = (hash % 360) / 360;
+    // const saturation = 1.0;
+    //
+    // const color = new THREE.Color();
+    // color.setHSL(hue, saturation, lightness / 100);
+    // return color;
+}
+
 /**
  * Add a new point to a Three.js Line object.
  * @param {THREE.Line} line - The Line object to which the point will be added.
@@ -110,6 +130,7 @@ class CustomLine {
         this.geometry = new THREE.BufferGeometry().setFromPoints(this.points);
         this.material = material
         this.line = new THREE.Line(this.geometry, material);
+        this.visible = true
         this.addToScene();
     }
 
@@ -136,16 +157,23 @@ class CustomLine {
     }
 
     update() {}
+
+    set_visible(flag) {
+        this.visible = flag
+        this.line = visible
+    }
 }
 const line = new CustomLine(scene, new THREE.LineBasicMaterial({
     color: 0x005500
 }))
 
 class CustomSphere {
-    constructor(scene, material) {
+    constructor(scene, scale, material) {
         this.scene = scene;
+        this.scale = scale
         this.spheres = [];
         this.material = material
+        this.visible = true
         this.addToScene();
     }
 
@@ -171,19 +199,25 @@ class CustomSphere {
     updateByJsonData(data) {
         const values = data['data']
         const position = new THREE.Vector3(values['position.x'], values['position.y'], values['position.z']);
-        const radius = 0.0075
+        const radius = 0.0075 * this.scale
         const widthSegments = 4
         const heightSegments = 4
         const sphereGeometry = new THREE.SphereGeometry(radius, widthSegments, heightSegments);
         const sphere = new THREE.Mesh(sphereGeometry, this.material);
         sphere.position.copy(position);
+        this.spheres.push(sphere);
         this.scene.add(sphere);
     }
 
     update() {}
+
+    set_visible(flag) {
+        this.visible = flag
+        this.spheres.forEach((obj) => obj.visible = flag)
+    }
 }
 
-const points = new CustomSphere(scene, new THREE.MeshLambertMaterial({
+const points = new CustomSphere(scene, 1.0, new THREE.MeshLambertMaterial({
     color: 0x00ff00
 }));
 
@@ -200,7 +234,7 @@ class ViewCones {
     constructor(scene, material) {
         this.scene = scene;
         this.material = material
-        this.i = 0
+        this.visible = true
         this.objects = []
     }
 
@@ -208,11 +242,6 @@ class ViewCones {
         const values = data['data']
         const position = new THREE.Vector3(values['position.x'], values['position.y'], values['position.z']);
         const rotation = new THREE.Euler().setFromQuaternion(new THREE.Quaternion().set(values['rotation.x'], values['rotation.y'], values['rotation.z'], values['rotation.w']));
-        this.i += 1
-
-        if (this.i % 50 > 0) {
-            return
-        }
 
         this.objects.forEach((object) => {
             var hslColor = {
@@ -229,10 +258,16 @@ class ViewCones {
         viewCone.rotation.copy(rotation);
         viewCone.rotateX(-Math.PI / 2);
         this.objects.push(viewCone);
+        viewCone.visible = this.visible
         this.scene.add(viewCone);
     }
 
     update() {}
+
+    set_visible(flag) {
+        this.visible = flag
+        this.objects.forEach((obj) => obj.visible = flag)
+    }
 }
 const viewCones = new ViewCones(scene, new THREE.MeshBasicMaterial({
     color: 0xffff00,
@@ -242,6 +277,7 @@ const viewCones = new ViewCones(scene, new THREE.MeshBasicMaterial({
 class CustomArrow {
     constructor(scene, color) {
         this.scene = scene;
+        this.visible = true
 
         const direction = new THREE.Vector3(1, 0, 0);
         this.position = new THREE.Vector3(0, 0, 0);
@@ -294,13 +330,18 @@ class CustomArrow {
 
         this.body.rotation.copy(this.rotation)
     }
+
+    set_visible(flag) {
+        this.visible = flag
+
+        [this.arrowX, this.arrowY, this.arrowZ, this.body].forEach((obj) => obj.visible = flag)
+    }
 }
 
 const customArrow = new CustomArrow(scene);
 objectListMap.addObjectWithLabel(customArrow, "Sample pose")
 objectListMap.addObjectWithLabel(line, "Sample pose")
 objectListMap.addObjectWithLabel(points, "Sample pose")
-objectListMap.addObjectWithLabel(viewCones, "Sample pose")
 
 function setAxis(scene) {
     const xAxisGeometry = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0, 0), new THREE.Vector3(1, 0, 0)]);
@@ -407,6 +448,56 @@ function initUiControl(canvas) {
 }
 initUiControl(canvas)
 
+const switchLabels = new Map()
+switchLabels.set('response-pose', new ViewCones(scene, new THREE.MeshBasicMaterial({
+    color: 0x00ffff,
+    wireframe: true
+})))
+switchLabels.set('request-pose', new ViewCones(scene, new THREE.MeshBasicMaterial({
+    color: 0xff0000,
+    wireframe: true
+})))
+
+function appendSwitch(label) {
+    const color = stringToColor(label + "seed", 90, 100)
+    const sphere = new CustomSphere(scene, 10.0, new THREE.MeshLambertMaterial({
+        color: color
+    }));
+    switchLabels.set(label, sphere)
+    const elementHTML = '<div class="form-check form-switch">' +
+        '<input class="object-toggle form-check-input" type="checkbox" role="switch">' +
+        '<label class="form-check-label">' + label + '</label>' +
+        '</div>'
+    const element = $(elementHTML)
+    $('#switch-config').append(element)
+    initSwitchTrigger(element)
+}
+
+function triggerSwitch(label, visible) {
+    if (visible) {
+        if (!objectListMap.hasObjectWithLabel(label)) {
+            const object = switchLabels.get(label)
+            console.log("[log] create new objects", label)
+            objectListMap.addObjectWithLabel(object, label)
+            messages.filter((message) => message.label == label).forEach((message) => triggerMessage(message));
+        }
+    }
+    const objects = objectListMap.getObjectsByLabel(label)
+    objects.forEach(function(object) {
+        object.set_visible(visible)
+    });
+}
+
+function initSwitchTrigger(e) {
+    $(e).on('change.bootstrapSwitch', function(e) {
+        const label = $(e.target).next().text()
+        const visible = e.target.checked
+        console.log("[log] switch button pressed", label, visible)
+        triggerSwitch(label, visible)
+    });
+}
+$('input.object-toggle').each((i, e) => initSwitchTrigger(e))
+
 // connection to the server
 const host = window.location.hostname
 const port = 8765
@@ -430,22 +521,33 @@ socket.addEventListener('open', (event) => {
     socket.send(JSON.stringify(queryData));
 });
 
-socket.addEventListener('message', (event) => {
-    const data = JSON.parse(event.data);
-    console.log('received data:', data);
+const messages = []
 
+function triggerMessage(data) {
     const timestamp = data.timestamp;
     const group = data.group;
     const sequentialId = data.sequentialId;
     const label = data.label;
     if (!objectListMap.hasObjectWithLabel(label)) {
-        console.log('label skipped:', label);
+        if (!switchLabels.has(label)) {
+            console.log('[log] new label detected:', label);
+            appendSwitch(label)
+        }
         return;
     }
     const objects = objectListMap.getObjectsByLabel(label)
     objects.forEach(function(object) {
         object.updateByJsonData(data)
     });
+}
+
+socket.addEventListener('message', (event) => {
+    const data = JSON.parse(event.data);
+    // console.log('received data:', data);
+    messages.push(data)
+    triggerMessage(data)
+
+    const timestamp = data.timestamp;
 
     const timestampInput = document.getElementById('timestamp');
     timestampInput.value = timestamp;
