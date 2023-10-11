@@ -28,7 +28,7 @@ echo 'DEL session-test' | redis-cli -h localhost -p 6379 --pipe
 # for checking
 # redis-cli -h localhost -p 6379 XREAD COUNT 10 BLOCK 100 STREAMS session-test 0
 
-# e.g. one objects
+# e.g. one object
 {
   for i in {1..10}
   do
@@ -39,7 +39,7 @@ echo 'DEL session-test' | redis-cli -h localhost -p 6379 --pipe
   echo 'END' > /dev/stderr
 } | websocat -n ws://127.0.0.1:8765/ws/set/database
 
-# e.g. one objects
+# e.g. multi objects
 {
   for i in {1..10}
   do
