@@ -43,6 +43,8 @@ async def set_initial_latest_stream_key():
     if len(result) < 2:
         return
     stream_keys = result[1]
+    if len(stream_keys) == 0:
+        return
     stream_key = stream_keys[-1]
     set_latest_stream_key(stream_key)
 
