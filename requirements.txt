@@ -1,8 +1,9 @@
-numpy==1.25.2
-numpy-quaternion==2022.4.3
-uvicorn==0.23.2
-redis==5.0.0
-fastapi==0.103.1
 coloredlogs==15.0.1
+fastapi==0.103.1
+numpy-quaternion==2022.4.3
+numpy==1.25.2
+redis==5.0.0
 starlette==0.27.0
 tinydb==4.8.0
+uvicorn==0.23.2
+websockets==11.0.3
