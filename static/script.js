@@ -108,13 +108,14 @@ function stringToColor(str, minLightness = 50, maxLightness = 100) {
  * @param {THREE.Material} material - The material for the Line object.
  * @param {THREE.Scene} scene - The Three.js scene.
  */
-function addPointToLine(line, newX, newY, newZ, material, scene) {
+function addPointToLine(line, newX, newY, newZ, material, scene, visible = true) {
     // Create a new geometry with the updated vertices
     var points = ToVertices(line.geometry)
     points.push(new THREE.Vector3(newX, newY, newZ))
     const newGeometry = new THREE.BufferGeometry().setFromPoints(points);
 
     const newLine = new THREE.Line(newGeometry, material);
+    newLine.visible = visible
 
     // Remove the old Line object from the scene and add the new one
     scene.remove(line);
@@ -129,8 +130,9 @@ class CustomLine {
         this.points = []
         this.geometry = new THREE.BufferGeometry().setFromPoints(this.points);
         this.material = material
-        this.line = new THREE.Line(this.geometry, material);
         this.visible = true
+        this.line = new THREE.Line(this.geometry, material);
+        this.line.visible = this.visible
         this.addToScene();
     }
 
@@ -153,19 +155,16 @@ class CustomLine {
     updateByJsonData(data) {
         const values = data['data']
         const position = new THREE.Vector3(values['position.x'], values['position.y'], values['position.z'])
-        this.line = addPointToLine(this.line, position.x, position.y, position.z, this.line.material, this.scene)
+        this.line = addPointToLine(this.line, position.x, position.y, position.z, this.line.material, this.scene, this.visible)
     }
 
     update() {}
 
     set_visible(flag) {
         this.visible = flag
-        this.line = visible
+        this.line.visible = flag
     }
 }
-const line = new CustomLine(scene, new THREE.LineBasicMaterial({
-    color: 0x005500
-}))
 
 class CustomSphere {
     constructor(scene, scale, material) {
@@ -205,6 +204,7 @@ class CustomSphere {
         const sphereGeometry = new THREE.SphereGeometry(radius, widthSegments, heightSegments);
         const sphere = new THREE.Mesh(sphereGeometry, this.material);
         sphere.position.copy(position);
+        sphere.visible = this.visible
         this.spheres.push(sphere);
         this.scene.add(sphere);
     }
@@ -216,10 +216,6 @@ class CustomSphere {
         this.spheres.forEach((obj) => obj.visible = flag)
     }
 }
-
-const points = new CustomSphere(scene, 1.0, new THREE.MeshLambertMaterial({
-    color: 0x00ff00
-}));
 
 function createViewCone(material) {
     const TILE_SIZE = 0.2
@@ -269,10 +265,6 @@ class ViewCones {
         this.objects.forEach((obj) => obj.visible = flag)
     }
 }
-const viewCones = new ViewCones(scene, new THREE.MeshBasicMaterial({
-    color: 0xffff00,
-    wireframe: true
-}));
 
 class CustomArrow {
     constructor(scene, color) {
@@ -289,16 +281,16 @@ class CustomArrow {
         this.arrowX = new THREE.ArrowHelper(direction, this.position, this.length, 0xff0000);
         this.arrowY = new THREE.ArrowHelper(direction, this.position, this.length, 0x00ff00);
         this.arrowZ = new THREE.ArrowHelper(direction, this.position, this.length, 0x0000ff);
-        scene.add(this.arrowX);
-        scene.add(this.arrowY);
-        scene.add(this.arrowZ);
 
         const geometry = new THREE.BoxGeometry(0.25, 0.1, 0.02);
         const material = new THREE.MeshBasicMaterial({
             color: 0xdddddd
         });
         this.body = new THREE.Mesh(geometry, material);
-        scene.add(this.body);
+
+        this.objects = [this.arrowX, this.arrowY, this.arrowZ, this.body]
+        this.objects.forEach((obj) => obj.visible = this.visible);
+        this.objects.forEach((obj) => scene.add(obj));
     }
 
     updateByJsonData(data) {
@@ -311,10 +303,7 @@ class CustomArrow {
     }
 
     update() {
-        this.arrowX.position.copy(this.position);
-        this.arrowY.position.copy(this.position);
-        this.arrowZ.position.copy(this.position);
-        this.body.position.copy(this.position)
+        this.objects.forEach((obj) => obj.position.copy(this.position));
 
         const directionVectorX = new THREE.Vector3(1, 0, 0);
         directionVectorX.applyEuler(this.rotation);
@@ -328,20 +317,14 @@ class CustomArrow {
         directionVectorZ.applyEuler(this.rotation);
         this.arrowZ.setDirection(directionVectorZ);
 
-        this.body.rotation.copy(this.rotation)
+        this.body.rotation.copy(this.rotation);
     }
 
     set_visible(flag) {
-        this.visible = flag
-
-        [this.arrowX, this.arrowY, this.arrowZ, this.body].forEach((obj) => obj.visible = flag)
+        this.visible = flag;
+        this.objects.forEach((obj) => obj.visible = flag);
     }
 }
-
-const customArrow = new CustomArrow(scene);
-objectListMap.addObjectWithLabel(customArrow, "Sample pose")
-objectListMap.addObjectWithLabel(line, "Sample pose")
-objectListMap.addObjectWithLabel(points, "Sample pose")
 
 function setAxis(scene) {
     const xAxisGeometry = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0, 0), new THREE.Vector3(1, 0, 0)]);
@@ -398,6 +381,18 @@ function createFocusPoint() {
 const focusPoint = createFocusPoint();
 scene.add(focusPoint);
 
+const customArrow = new CustomArrow(scene);
+const line = new CustomLine(scene, new THREE.LineBasicMaterial({
+    color: 0x005500
+}))
+const points = new CustomSphere(scene, 1.0, new THREE.MeshLambertMaterial({
+    color: 0x00ff00
+}));
+objectListMap.addObjectWithLabel(customArrow, "Sample pose")
+objectListMap.addObjectWithLabel(line, "Sample pose")
+objectListMap.addObjectWithLabel(points, "Sample pose")
+
+
 var auto_mode = false;
 const cameraDiff = new THREE.Vector3();
 const animate = () => {
@@ -449,6 +444,7 @@ function initUiControl(canvas) {
 initUiControl(canvas)
 
 const switchLabels = new Map()
+switchLabels.set('Sample pose', null)
 switchLabels.set('response-pose', new ViewCones(scene, new THREE.MeshBasicMaterial({
     color: 0x00ffff,
     wireframe: true
