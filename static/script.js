@@ -326,29 +326,29 @@ class CustomArrow {
     }
 }
 
-function setAxis(scene) {
-    const xAxisGeometry = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0, 0), new THREE.Vector3(1, 0, 0)]);
+function setAxis(scene, length = 1.0) {
+    const xAxisGeometry = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0, 0), new THREE.Vector3(length, 0, 0)]);
     const xAxisMaterial = new THREE.LineBasicMaterial({
         color: 0xff0000 // X:Red
     });
     const xAxisLine = new THREE.Line(xAxisGeometry, xAxisMaterial);
     scene.add(xAxisLine);
 
-    const yAxisGeometry = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 1, 0)]);
+    const yAxisGeometry = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, length, 0)]);
     const yAxisMaterial = new THREE.LineBasicMaterial({
         color: 0x00ff00 // Y:Green
     });
     const yAxisLine = new THREE.Line(yAxisGeometry, yAxisMaterial);
     scene.add(yAxisLine);
 
-    const zAxisGeometry = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 0, 1)]);
+    const zAxisGeometry = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 0, length)]);
     const zAxisMaterial = new THREE.LineBasicMaterial({
         color: 0x0000ff // Z:Blue
     });
     const zAxisLine = new THREE.Line(zAxisGeometry, zAxisMaterial);
     scene.add(zAxisLine);
 }
-setAxis(scene)
+setAxis(scene, 10.0)
 
 function createFocusPoint() {
     const xAxisGeometry = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(-1, 0, 0), new THREE.Vector3(1, 0, 0)]);
@@ -369,10 +369,17 @@ function createFocusPoint() {
     const yAxisLine = new THREE.Line(yAxisGeometry, yAxisMaterial);
     const zAxisLine = new THREE.Line(zAxisGeometry, zAxisMaterial);
 
+    const pointGeometry = new THREE.BoxGeometry(0.1, 0.1, 0.1);
+    const pointMaterial = new THREE.MeshBasicMaterial({
+        color: 0xFFFFFF
+    });
+    const focusPointBox = new THREE.Mesh(pointGeometry, pointMaterial);
+
     const focusPoint = new THREE.Object3D();
     focusPoint.add(xAxisLine);
     focusPoint.add(yAxisLine);
     focusPoint.add(zAxisLine);
+    focusPoint.add(focusPointBox);
 
     focusPoint.scale.set(0.1, 0.1, 0.1)
     return focusPoint
