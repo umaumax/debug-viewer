@@ -3,6 +3,15 @@ import {
     OrbitControls
 } from "three/addons/controls/OrbitControls.js";
 
+const params = new Proxy(new URLSearchParams(window.location.search), {
+    get: (searchParams, prop) => searchParams.get(prop),
+});
+
+const paramConfig = {
+    group: params.group ? params.group : 'new',
+    dataInterval: params.interval ? Number(params.interval) : 5,
+}
+
 const scene = new THREE.Scene();
 
 const fov = 75.0
@@ -85,7 +94,7 @@ function stringToColor(str, minLightness = 50, maxLightness = 100) {
         hash = str.charCodeAt(i) + ((hash << 5) - hash);
     }
 
-    const colors = ['#FF0000', '#00FF00', '#0000FF']
+    const colors = ['#FFFF00', '#00FFFF', '#FF00FF']
     const index = hash % colors.length
     return colors[index]
 
@@ -167,13 +176,15 @@ class CustomLine {
 }
 
 class CustomSphere {
-    constructor(scene, scale, material) {
+    constructor(scene, scale, material, interval = 1) {
         this.scene = scene;
         this.scale = scale
         this.spheres = [];
         this.material = material
         this.visible = true
         this.addToScene();
+        this.count = 0
+        this.interval = interval
     }
 
     // for debug
@@ -196,6 +207,12 @@ class CustomSphere {
     }
 
     updateByJsonData(data) {
+        this.count += 1;
+        // filter input data
+        if (this.count % this.interval != 0) {
+            return
+        }
+
         const values = data['data']
         const position = new THREE.Vector3(values['position.x'], values['position.y'], values['position.z']);
         const radius = 0.0075 * this.scale
@@ -394,7 +411,7 @@ const line = new CustomLine(scene, new THREE.LineBasicMaterial({
 }))
 const points = new CustomSphere(scene, 1.0, new THREE.MeshLambertMaterial({
     color: 0x00ff00
-}));
+}), paramConfig.dataInterval);
 objectListMap.addObjectWithLabel(customArrow, "Sample pose")
 objectListMap.addObjectWithLabel(line, "Sample pose")
 objectListMap.addObjectWithLabel(points, "Sample pose")
@@ -451,22 +468,25 @@ function initUiControl(canvas) {
 initUiControl(canvas)
 
 const switchLabels = new Map()
-switchLabels.set('Sample pose', null)
-switchLabels.set('response-pose', new ViewCones(scene, new THREE.MeshBasicMaterial({
-    color: 0x00ffff,
+switchLabels.set('Sample pose', [])
+switchLabels.set('response-pose', [new ViewCones(scene, new THREE.MeshBasicMaterial({
+    color: 0xffd700,
     wireframe: true
-})))
-switchLabels.set('request-pose', new ViewCones(scene, new THREE.MeshBasicMaterial({
-    color: 0xff0000,
+}))])
+switchLabels.set('request-pose', [new ViewCones(scene, new THREE.MeshBasicMaterial({
+    color: 0xadff2f,
     wireframe: true
-})))
+}))])
 
 function appendSwitch(label) {
     const color = stringToColor(label + "seed", 90, 100)
-    const sphere = new CustomSphere(scene, 10.0, new THREE.MeshLambertMaterial({
+    const sphere = new CustomSphere(scene, 2.0, new THREE.MeshLambertMaterial({
         color: color
-    }));
-    switchLabels.set(label, sphere)
+    }), paramConfig.dataInterval);
+    const line = new CustomLine(scene, new THREE.LineBasicMaterial({
+        color: color
+    }))
+    switchLabels.set(label, [sphere, line])
     const elementHTML = '<div class="form-check form-switch">' +
         '<input class="object-toggle form-check-input" type="checkbox" role="switch">' +
         '<label class="form-check-label">' + label + '</label>' +
@@ -479,10 +499,12 @@ function appendSwitch(label) {
 function triggerSwitch(label, visible) {
     if (visible) {
         if (!objectListMap.hasObjectWithLabel(label)) {
-            const object = switchLabels.get(label)
+            const objects = switchLabels.get(label)
             console.log("[log] create new objects", label)
-            objectListMap.addObjectWithLabel(object, label)
-            messages.filter((message) => message.label == label).forEach((message) => triggerMessage(message));
+            objects.forEach((object) => {
+                objectListMap.addObjectWithLabel(object, label)
+                messages.filter((message) => message.label == label).forEach((message) => triggerMessage(message));
+            });
         }
     }
     const objects = objectListMap.getObjectsByLabel(label)
@@ -509,15 +531,11 @@ const path = 'ws/get/database'
 const url = 'ws://' + host + ':' + port + '/' + path
 const socket = new WebSocket(url);
 
-const params = new Proxy(new URLSearchParams(window.location.search), {
-    get: (searchParams, prop) => searchParams.get(prop),
-});
-
 socket.addEventListener('open', (event) => {
     console.log('connection opened');
 
     const queryData = {
-        group: params.group ? params.group : 'new',
+        group: paramConfig.group,
         timestamp: '12345'
     };
 
