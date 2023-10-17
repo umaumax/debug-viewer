@@ -21,7 +21,7 @@ access to http://localhost:8765
 ```
 
 ## how to use dummy data
-required: launch redis server at 6379
+required: launch redis server at 6379 (ref: [umaumax/redis-dev-env]( https://github.com/umaumax/redis-dev-env ))
 ``` bash
 echo 'DEL session-test' | redis-cli -h localhost -p 6379 --pipe
 
