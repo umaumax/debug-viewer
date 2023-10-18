@@ -44,6 +44,14 @@
                         <label class="form-check-label">request-pose</label>
                     </div>
                 </div>
+                <div>
+                    <label for="ply model" class="col-form-label">ply model</label>
+                    <input class="form-control form-control-sm" type="text" id="ply_model" placeholder="ply file name"
+                        value="sample.ply">
+                    <input class="form-control form-control-sm" type="text" id="ply_model_scale" placeholder="ply model scale"
+                        value="auto">
+                    <button type="button" class="btn btn-info" onclick="loadPlyModel(document.getElementById('ply_model').value, document.getElementById('ply_model_scale').value);">load</button>
+                </div>
             </div>
         </div>
         <div class="bottom-pane rounded border border-1">

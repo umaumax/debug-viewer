@@ -2,6 +2,9 @@ import * as THREE from "three";
 import {
     OrbitControls
 } from "three/addons/controls/OrbitControls.js";
+import {
+    PLYLoader
+} from "three/addons/loaders/PLYLoader.js";
 
 const params = new Proxy(new URLSearchParams(window.location.search), {
     get: (searchParams, prop) => searchParams.get(prop),
@@ -415,6 +418,70 @@ const points = new CustomSphere(scene, 1.0, new THREE.MeshLambertMaterial({
 objectListMap.addObjectWithLabel(customArrow, "Sample pose")
 objectListMap.addObjectWithLabel(line, "Sample pose")
 objectListMap.addObjectWithLabel(points, "Sample pose")
+
+function resizePointCloudToTargetSize(geometry, targetSize) {
+    const positions = geometry.attributes.position.array;
+    let minX = Infinity;
+    let maxX = -Infinity;
+    let minY = Infinity;
+    let maxY = -Infinity;
+    let minZ = Infinity;
+    let maxZ = -Infinity;
+
+    for (let i = 0; i < positions.length; i += 3) {
+        const x = positions[i];
+        const y = positions[i + 1];
+        const z = positions[i + 2];
+
+        if (x < minX) minX = x;
+        if (x > maxX) maxX = x;
+        if (y < minY) minY = y;
+        if (y > maxY) maxY = y;
+        if (z < minZ) minZ = z;
+        if (z > maxZ) maxZ = z;
+    }
+
+    const currentSizeX = maxX - minX;
+    const currentSizeY = maxY - minY;
+    const currentSizeZ = maxZ - minZ;
+
+    const scaleX = targetSize / currentSizeX;
+    const scaleY = targetSize / currentSizeY;
+    const scaleZ = targetSize / currentSizeZ;
+    const scale = Math.max(scaleX, scaleY, scaleZ)
+
+    geometry.scale(scale, scale, scale);
+    geometry.attributes.position.needsUpdate = true;
+}
+
+window.loadPlyModel = function(plyModelPath, scale = 'auto') {
+    if (plyModelPath == "") return;
+
+    console.log("start to load ply file:", plyModelPath);
+    const material = new THREE.PointsMaterial({
+        vertexColors: true,
+        size: 0.03,
+    });
+    const loader = new PLYLoader()
+    loader.load(
+        plyModelPath,
+        function(geometry) {
+            if (scale == 'auto') {
+                resizePointCloudToTargetSize(geometry, 1.0)
+            } else {
+                geometry.scale(scale, scale, scale);
+            }
+            const particles = new THREE.Points(geometry, material);
+            scene.add(particles);
+        },
+        (xhr) => {
+            console.log(xhr.loaded + '/' + xhr.total + ' ' + (xhr.loaded / xhr.total) * 100 + '% loaded')
+        },
+        (error) => {
+            console.log(error)
+        }
+    )
+}
 
 
 var auto_mode = false;
