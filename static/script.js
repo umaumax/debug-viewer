@@ -454,7 +454,7 @@ function resizePointCloudToTargetSize(geometry, targetSize) {
     geometry.attributes.position.needsUpdate = true;
 }
 
-window.loadPlyModel = function(plyModelPath, scale = 'auto') {
+export const loadPlyModel = function(plyModelPath, scale = 'auto') {
     if (plyModelPath == "") return;
 
     console.log("start to load ply file:", plyModelPath);
@@ -482,7 +482,8 @@ window.loadPlyModel = function(plyModelPath, scale = 'auto') {
         }
     )
 }
-
+// for onClick
+window.loadPlyModel = loadPlyModel
 
 var auto_mode = false;
 const cameraDiff = new THREE.Vector3();
