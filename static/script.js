@@ -5,6 +5,20 @@ import {
 import {
     PLYLoader
 } from "three/addons/loaders/PLYLoader.js";
+import {
+    FontLoader
+} from "three/addons/loaders/FontLoader.js";
+import {
+    TextGeometry
+} from "three/addons/geometries/TextGeometry.js";
+
+const fontLoader = new FontLoader();
+
+function fontCallback(callback, fontPath = 'fonts/helvetiker_regular.typeface.json') {
+    fontLoader.load(fontPath, function(font) {
+        callback(font)
+    });
+}
 
 const params = new Proxy(new URLSearchParams(window.location.search), {
     get: (searchParams, prop) => searchParams.get(prop),
@@ -367,6 +381,73 @@ function setAxis(scene, length = 1.0) {
     });
     const zAxisLine = new THREE.Line(zAxisGeometry, zAxisMaterial);
     scene.add(zAxisLine);
+
+    fontCallback((font) => {
+        const geometry = new TextGeometry('X', {
+            font: font,
+            size: 0.1,
+            height: 0.01,
+            curveSegments: 0.005,
+            bevelEnabled: true,
+            bevelThickness: 0.005,
+            bevelSize: 0.005,
+            bevelOffset: 0,
+        });
+        geometry.center()
+        const textMesh = new THREE.Mesh(
+            geometry,
+            new THREE.MeshLambertMaterial({
+                color: `#FF0000`,
+            })
+        );
+        textMesh.position.set(length, 0, 0);
+        textMesh.scale.set(10.0, 10.0, 10.0);
+        scene.add(textMesh);
+    })
+    fontCallback((font) => {
+        const geometry = new TextGeometry('Y', {
+            font: font,
+            size: 0.1,
+            height: 0.01,
+            curveSegments: 0.005,
+            bevelEnabled: true,
+            bevelThickness: 0.005,
+            bevelSize: 0.005,
+            bevelOffset: 0,
+        });
+        geometry.center()
+        const textMesh = new THREE.Mesh(
+            geometry,
+            new THREE.MeshLambertMaterial({
+                color: `#00FF00`,
+            })
+        );
+        textMesh.position.set(0, length, 0);
+        textMesh.scale.set(10.0, 10.0, 10.0);
+        scene.add(textMesh);
+    })
+    fontCallback((font) => {
+        const geometry = new TextGeometry('Z', {
+            font: font,
+            size: 0.1,
+            height: 0.01,
+            curveSegments: 0.005,
+            bevelEnabled: true,
+            bevelThickness: 0.005,
+            bevelSize: 0.005,
+            bevelOffset: 0,
+        });
+        geometry.center()
+        const textMesh = new THREE.Mesh(
+            geometry,
+            new THREE.MeshLambertMaterial({
+                color: `#0000FF`,
+            })
+        );
+        textMesh.position.set(0, 0, length);
+        textMesh.scale.set(10.0, 10.0, 10.0);
+        scene.add(textMesh);
+    })
 }
 setAxis(scene, 10.0)
 
